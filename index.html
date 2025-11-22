@@ -1,212 +1,86 @@
-<!doctype html>
-<html lang="vi">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Phòng học VR — hoasinh.gltf</title>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>VR Lab Room</title>
 
-  <!-- A-FRAME (bản ổn định nhất, tránh lỗi AFRAME is not defined) -->
-  <script src="https://cdn.jsdelivr.net/npm/aframe@1.5.0/dist/aframe.min.js"></script>
+    <!-- A-FRAME CHUẨN (KHÔNG LỖI) -->
+    <script src="https://cdn.jsdelivr.net/npm/aframe@1.5.0/dist/aframe.min.js"></script>
 
-  <!-- Extras -->
-  <script src="https://cdn.jsdelivr.net/npm/aframe-extras@6.1.1/dist/aframe-extras.min.js"></script>
+    <!-- Physics -->
+    <script src="https://cdn.jsdelivr.net/npm/aframe-physics-system@4.0.1/dist/aframe-physics-system.min.js"></script>
 
-  <!-- Super Hands (grab, drag, stretch) -->
-  <script src="https://cdn.jsdelivr.net/npm/aframe-super-hands-component@5.0.3/dist/aframe-super-hands.min.js"></script>
+    <!-- Extras -->
+    <script src="https://cdn.jsdelivr.net/npm/aframe-extras@6.1.1/dist/aframe-extras.min.js"></script>
 
-  <!-- Teleport controls -->
-  <script src="https://cdn.jsdelivr.net/npm/aframe-teleport-controls@4.0.1/dist/aframe-teleport-controls.min.js"></script>
-
-  <!-- Physics system (phải để SAU AFRAME) -->
-  <script src="https://cdn.jsdelivr.net/npm/aframe-physics-system@4.0.1/dist/aframe-physics-system.min.js"></script>
-
-  <style>
-    html,body { height:100%; margin:0; font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial; }
-    #ui { position:fixed; right:12px; top:12px; width:320px; background:rgba(0,0,0,0.55); color:#fff; padding:12px; border-radius:10px; backdrop-filter:blur(4px); }
-    #ui h3 { margin:0 0 8px 0; font-size:16px }
-    #ui label{display:block; margin:6px 0; font-size:13px}
-    #ui input[type=range]{width:100%}
-    #status{font-size:12px; opacity:0.9}
-    .btn { background:#1e88e5; border:none; padding:8px 10px; color:white; border-radius:6px; cursor:pointer; margin-right:6px }
-    .btn.secondary { background:#4caf50 }
-  </style>
-</head>
-<body>
-
-<!-- UI điều khiển -->
-<div id="ui">
-  <h3>Phòng học VR — điều khiển</h3>
-  <div id="status">Đang chờ tải model...</div>
-  <label>Scale: <span id="scaleVal">1.00</span></label>
-  <input id="scale" type="range" min="0.05" max="3" step="0.01" value="1">
-
-  <label>Rotate Y (°): <span id="rotVal">0</span></label>
-  <input id="rot" type="range" min="-180" max="180" step="1" value="0">
-
-  <div style="margin-top:8px">
-    <button id="centerBtn" class="btn">Center model</button>
-    <button id="snapBtn" class="btn secondary">Snap to grid</button>
-  </div>
-  <div style="margin-top:8px">
-    <button id="resetBtn" class="btn">Reset camera</button>
-    <button id="togglePhys" class="btn secondary">Bật Physics</button>
-  </div>
-  <p style="margin-top:8px;font-size:12px">Hướng dẫn: dùng Teleport để di chuyển. Grab để nhặt vật.</p>
-</div>
-
-<!-- SCENE VR -->
-<a-scene background="color: #89c2ff" renderer="antialias: true" physics="gravity: -9.8" vr-mode-ui="enterVRButton: true">
-  <a-assets>
-    <a-asset-item id="mainModel" src="hoasinh.gltf" crossorigin="anonymous"></a-asset-item>
-  </a-assets>
-
-  <!-- Lights -->
-  <a-entity light="type:ambient; intensity:0.6"></a-entity>
-  <a-entity light="type:directional; intensity:0.8" position="2 4 1"></a-entity>
-
-  <!-- Floor -->
-  <a-entity id="floor" geometry="primitive: plane; width: 40; height: 40"
-            rotation="-90 0 0" material="shader:flat; color:#ececec; repeat: 40 40"
-            static-body></a-entity>
-  <a-grid material="opacity:0.35"></a-grid>
-
-  <!-- Camera rig -->
-  <a-entity id="rig" position="0 1.6 3">
-    <a-entity id="camera" camera look-controls wasd-controls>
-      <a-entity raycaster="objects: .interactable" line="color: #118ab2; opacity: 0.9" position="0 0 -0.5"></a-entity>
-    </a-entity>
-
-    <!-- VR Controllers -->
-    <a-entity id="leftHand" hand-controls="left" super-hands teleport-controls="cameraRig: #rig; teleportOrigin: #camera; button: trigger; collisionEntities: #floor"></a-entity>
-    <a-entity id="rightHand" hand-controls="right" super-hands teleport-controls="cameraRig: #rig; teleportOrigin: #camera; button: trigger; collisionEntities: #floor"></a-entity>
-  </a-entity>
-
-  <!-- Model gốc -->
-  <a-entity id="modelRoot" class="interactable" position="0 0 0"></a-entity>
-
-  <!-- Props -->
-  <a-box position="-1 0.45 -1" depth="0.6" height="0.9" width="1.2" material="color:#b47b4e" static-body></a-box>
-  <a-box position="1 0.35 -0.5" depth="0.4" height="0.7" width="0.6" material="color:#2f6f4e" static-body></a-box>
-
-  <a-sky color="#aee1ff"></a-sky>
-
-  <a-entity id="infoPanel" position="-2 1.6 -2" rotation="0 25 0">
-    <a-plane width="1.6" height="0.7" material="color:#222; opacity:0.7"></a-plane>
-    <a-entity position="-0.72 0.18 0.01"
-              text="value: Model: hoasinh.gltf\nGrab để giữ, Teleport để di chuyển; color:#fff; width:1.4; wrapCount:28"></a-entity>
-  </a-entity>
-</a-scene>
-
-<!-- SCRIPT CUSTOM -->
-<script>
-/* ----- MODEL LOADER + CENTERING + SCALING ----- */
-AFRAME.registerComponent('model-manager', {
-  init: function () {
-    const modelRoot = document.getElementById('modelRoot');
-    const asset = document.getElementById('mainModel');
-    const status = document.getElementById('status');
-
-    asset.addEventListener('model-loaded', (e) => {
-      status.innerText = 'Model tải xong — đang căn chỉnh...';
-
-      const cloned = e.detail.model.clone();
-
-      cloned.traverse((node) => {
-        if (node.isMesh) {
-          node.castShadow = true;
-          node.receiveShadow = true;
+    <!-- Fix loader + click events -->
+    <script>
+      AFRAME.registerComponent("click-to-scale", {
+        init: function () {
+          this.el.addEventListener("click", () => {
+            this.el.setAttribute("scale", "1.2 1.2 1.2");
+          });
         }
       });
+    </script>
 
-      modelRoot.innerHTML = "";
-      modelRoot.object3D.add(cloned);
+    <style>
+      body { margin: 0; overflow: hidden; }
+      #loading {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #000;
+        color: #fff;
+        font-size: 24px;
+        z-index: 9999;
+      }
+    </style>
+  </head>
 
-      const box = new THREE.Box3().setFromObject(cloned);
-      const size = new THREE.Vector3();
-      box.getSize(size);
-      const center = new THREE.Vector3();
-      box.getCenter(center);
+  <body>
+    <div id="loading">Đang tải mô hình...</div>
 
-      let scale = 1.6 / size.y;
-      scale = Math.max(0.02, Math.min(3, scale));
-      cloned.scale.setScalar(scale);
+    <a-scene physics="gravity: -9.8" renderer="antialias: true" loading-screen="enabled:false">
 
-      const box2 = new THREE.Box3().setFromObject(cloned);
-      const center2 = new THREE.Vector3();
-      box2.getCenter(center2);
+      <!-- Load model -->
+      <a-assets>
+        <a-asset-item id="labModel" src="hoasinh.gltf"></a-asset-item>
+      </a-assets>
 
-      cloned.position.y -= box2.min.y;
-      cloned.position.x -= center2.x;
-      cloned.position.z -= center2.z;
+      <!-- Add model -->
+      <a-entity id="modelRoot"
+        gltf-model="#labModel"
+        position="0 0 0"
+        scale="1 1 1"
+        click-to-scale
+        shadow="cast: true; receive: true">
+      </a-entity>
 
-      window._vrModel = cloned;
-      window._modelScale = scale;
+      <!-- Camera + VR controllers -->
+      <a-entity position="0 1.6 3">
+        <a-camera wasd-controls-enabled="true"></a-camera>
 
-      document.getElementById("scale").value = scale.toFixed(2);
-      document.getElementById("scaleVal").innerText = scale.toFixed(2);
+        <!-- VR Controllers -->
+        <a-entity laser-controls="hand: left"></a-entity>
+        <a-entity laser-controls="hand: right"></a-entity>
+      </a-entity>
 
-      status.innerText = 'Model đã sẵn sàng.';
-    });
-  }
-});
+      <!-- Lights -->
+      <a-entity light="type: directional; intensity: 1" position="1 1 1"></a-entity>
+      <a-entity light="type: ambient; intensity: 0.5"></a-entity>
 
-document.querySelector('a-scene').setAttribute('model-manager', '');
+      <!-- Floor -->
+      <a-plane static-body rotation="-90 0 0" width="20" height="20" color="#e5e5e5"></a-plane>
+    </a-scene>
 
-/* ----- UI Controls ----- */
-(function(){
-  const scaleIn = scale;
-  const rotIn = rot;
-  const status = status;
-
-  scaleIn.addEventListener('input', () => {
-    if (!window._vrModel) return;
-    const v = parseFloat(scaleIn.value);
-    window._vrModel.scale.setScalar(v);
-    document.getElementById('scaleVal').innerText = v.toFixed(2);
-  });
-
-  rotIn.addEventListener('input', () => {
-    document.getElementById('modelRoot')
-      .setAttribute('rotation', `0 ${rotIn.value} 0`);
-    document.getElementById('rotVal').innerText = rotIn.value;
-  });
-
-  centerBtn.addEventListener('click', () => {
-    if (!window._vrModel) return;
-    const box = new THREE.Box3().setFromObject(window._vrModel);
-    const center = new THREE.Vector3(); box.getCenter(center);
-    window._vrModel.position.x -= center.x;
-    window._vrModel.position.z -= center.z;
-    window._vrModel.position.y -= box.min.y;
-    status.innerText = "Đã center model.";
-  });
-
-  snapBtn.addEventListener('click', () => {
-    if (!window._vrModel) return;
-    const g = 0.1;
-    window._vrModel.position.x = Math.round(window._vrModel.position.x/g)*g;
-    window._vrModel.position.y = Math.round(window._vrModel.position.y/g)*g;
-    window._vrModel.position.z = Math.round(window._vrModel.position.z/g)*g;
-    status.innerText = "Đã snap grid.";
-  });
-
-  resetBtn.addEventListener('click', () => {
-    document.getElementById('rig').setAttribute('position','0 1.6 3');
-    status.innerText = "Camera reset.";
-  });
-
-  togglePhys.addEventListener('click', () => {
-    const root = document.getElementById('modelRoot');
-    if (!root.hasAttribute('dynamic-body')) {
-      root.setAttribute('dynamic-body','mass:1');
-      togglePhys.innerText = 'Tắt Physics';
-    } else {
-      root.removeAttribute('dynamic-body');
-      togglePhys.innerText = 'Bật Physics';
-    }
-  });
-})();
-</script>
-
-</body>
+    <script>
+      // Tắt loading khi mô hình load xong
+      document.querySelector("#labModel").addEventListener("loaded", () => {
+        document.getElementById("loading").style.display = "none";
+      });
+    </script>
+  </body>
 </html>
